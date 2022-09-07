@@ -1,10 +1,9 @@
 import 'dart:math';
 
 import 'package:alphabet_scroll_view/alphabet_scroll_view.dart';
-import 'package:contacts_app/bloc/contacts_cubit.dart';
 import 'package:contacts_app/data/cloud/dio_helper.dart';
-import 'package:contacts_app/data/cloud/tokens.dart';
-import 'package:contacts_app/extensions/call_model_list_extension.dart';
+import 'package:contacts_app/data/cloud/constants.dart';
+import 'package:contacts_app/extensions/contact_model_list_extension.dart';
 import 'package:contacts_app/models/contact_model.dart';
 import 'package:contacts_app/route_manager/app_routes.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +17,6 @@ class ContactsPage extends StatefulWidget {
 
 class _ContactsPageState extends State<ContactsPage> {
   final _randomGenerator = Random();
-  late ContactsCubit _contactsCubit;
   late Size _screenSize;
   List<Color> colors = [
     Colors.cyanAccent,
@@ -31,7 +29,6 @@ class _ContactsPageState extends State<ContactsPage> {
   @override
   Widget build(BuildContext context) {
     _screenSize = MediaQuery.of(context).size;
-    _contactsCubit = ContactsCubit.getInstance(context);
     return _buildPage();
   }
 
@@ -53,64 +50,120 @@ class _ContactsPageState extends State<ContactsPage> {
                     height: 20,
                   ),
                   FutureBuilder<List<ContactModel>>(
-                    future: DioHelper.getContacts(url: getContactsToken),
+                    future: DioHelper.getContacts(url: ApiConstants.endpoint),
                     builder: (_, snapshot) {
-                      if (!snapshot.hasData) {
-                        return const Expanded(child: Center(child: CircularProgressIndicator(color: Colors.green,)));
+                      if(snapshot.hasError){
+                        return Expanded(
+                          child:
+                          Center(
+                              child: Text(
+                                'Server Error',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headline5!
+                                    .copyWith(color: Colors.white70),
+                              )),
+                        );
                       }
-                      return Expanded(
-                      child: snapshot.data!.isEmpty? Center(child: Text('No Contacts',style: Theme.of(context).textTheme.headline5!.copyWith(
-                          color: Colors.white70
-                      ),)) : AlphabetScrollView(
-                        list: snapshot.data!
-                            .map((contact) => AlphaModel(contact.name))
-                            .toList(),
-                        itemExtent: _screenSize.width * 0.3,
-                        itemBuilder: (_, k, id) {
-                          return Padding(
-                            padding: EdgeInsets.symmetric(
-                                vertical: _screenSize.height * 0.02),
-                            child: InkWell(
-                              onTap: () {
-                                Navigator.pushNamed(
-                                    context, AppRoutes.callerDetailsPageRoute,
-                                    arguments: _contactsCubit.calls.getCall(
-                                        _contactsCubit.contacts[k].number));
-                              },
-                              child: Row(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundColor: colors[
-                                    _randomGenerator.nextInt(colors.length)],
-                                    radius: _screenSize.width * 0.06,
-                                    child: Text(
-                                      id[0].toUpperCase(),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headline5!
-                                          .copyWith(color: Colors.white),
+                      else if(snapshot.hasData){
+                        return Expanded(
+                          child: AlphabetScrollView(
+                            list: snapshot.data!
+                                .map((contact) => AlphaModel(contact.name))
+                                .toList(),
+                            itemExtent: _screenSize.width * 0.25,
+                            itemBuilder: (_, index, name) {
+                              ContactModel? contactModel=snapshot.data!.searchByName(name);
+                              return InkWell(
+                                onTap: (){
+                                  Navigator.pushNamed(context, AppRoutes.contactDetailPageRoute,arguments: contactModel);
+                                },
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor: colors[
+                                      _randomGenerator
+                                          .nextInt(colors.length)],
+                                      radius: _screenSize.width * 0.07,
+                                      child: Text(
+                                        contactModel!.id.toString(),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headline5!
+                                            .copyWith(
+                                            color: Colors.white),
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(
-                                    width: 15,
-                                  ),
-                                  Text(
-                                    id,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium!
-                                        .copyWith(color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                        selectedTextStyle: const TextStyle(color: Colors.green),
-                        unselectedTextStyle: const TextStyle(color: Colors.grey),
-                        isAlphabetsFiltered: false,
-                      ),
-                    );
+                                    const SizedBox(
+                                      width: 15,
+                                    ),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          name,
+                                          maxLines: 1,
+                                          softWrap: true,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium!
+                                              .copyWith(color: Colors.white),
+                                        ),
+                                        const SizedBox(height: 5,),
+                                        Flexible(
+                                          child: Row(
+                                            children: [
+                                              Text(contactModel.phone,
+                                                maxLines: 1,
+                                                softWrap: true,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .caption!
+                                                    .copyWith(color: Colors.white54),),
+                                              Padding(
+                                                padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                                                child: Container(width: 8,height: 8,
+                                                decoration: const BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: Colors.grey,
+                                                ),),
+                                              ),
+                                              SizedBox(
+                                                width : _screenSize.width*0.3,
+                                                child: Text(contactModel.email!,
+                                                  maxLines: 1,
+                                                  softWrap: true,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .caption!
+                                                      .copyWith(color: Colors.white54),),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            selectedTextStyle:
+                            const TextStyle(color: Colors.green),
+                            unselectedTextStyle:
+                            const TextStyle(color: Colors.grey),
+                            isAlphabetsFiltered: false,
+                          ),
+                        );
+                      }
+                      return const Expanded(
+                          child: Center(
+                              child: CircularProgressIndicator(
+                                color: Colors.green,
+                              )));
                     },
                   ),
                 ],

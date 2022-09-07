@@ -1,9 +1,9 @@
 import 'dart:math';
 
 import 'package:contacts_app/bloc/contacts_cubit.dart';
-import 'package:contacts_app/extensions/contact_model_list_extension.dart';
+import 'package:contacts_app/data/cloud/constants.dart';
+import 'package:contacts_app/data/cloud/dio_helper.dart';
 import 'package:contacts_app/models/contact_model.dart';
-import 'package:contacts_app/shared/caller_number.dart';
 import 'package:contacts_app/utilities/empty_search_pages.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +20,7 @@ class _SearchPageState extends State<SearchPage> {
   late ContactsCubit _contactsCubit;
   final String noHistoryMessage = 'No Search History';
   final String noResultsMessage = 'No Search Results';
+  final String serverErrorMessage = 'Server Error';
   bool isTyping = false;
   final _randomGenerator = Random();
   final _searchController = TextEditingController();
@@ -112,13 +113,20 @@ class _SearchPageState extends State<SearchPage> {
 
   Widget _buildBody() {
     if (isTyping) {
-      List<ContactModel> contactsResults =
-          _contactsCubit.contacts.search(_searchController.text);
-      if (contactsResults.isEmpty) {
-        return _buildNoPageBody(EmptySearchPages.NO_SEARCH_RESULTS);
-      } else {
-        return _buildSearchResultsBody(contactsResults);
-      }
+      return FutureBuilder<ContactModel>(
+          future: DioHelper.getContactById(
+              url: ApiConstants.endpoint, id: _searchController.text),
+          builder: (_, snapshot) {
+            if (snapshot.hasError) {
+              return _buildNoPageBody(EmptySearchPages.SERVER_ERROR);
+            } else if (snapshot.hasData) {
+              return _buildSearchResultsBody(snapshot.data!);
+            }
+            return const Center(
+                child: CircularProgressIndicator(
+              color: Colors.green,
+            ));
+          });
     } else {
       if (_contactsCubit.suggestions.isEmpty) {
         return _buildNoPageBody(EmptySearchPages.NO_SEARCH_HISTORY);
@@ -128,10 +136,17 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
-  Widget _buildNoPageBody(EmptySearchPages page) =>
-      page == EmptySearchPages.NO_SEARCH_HISTORY
-          ? _buildNoHistoryBody()
-          : _buildNoResultsBody();
+  Widget _buildNoPageBody(EmptySearchPages page) {
+    switch (page) {
+      case EmptySearchPages.NO_SEARCH_HISTORY:
+        return _buildNoHistoryBody();
+      case EmptySearchPages.NO_SEARCH_RESULTS:
+        return _buildNoResultsBody();
+      case EmptySearchPages.SERVER_ERROR:
+        return _buildServerError();
+    }
+  }
+
   Widget _buildNoHistoryBody() => SafeArea(
         child: SizedBox(
           width: double.infinity,
@@ -178,6 +193,34 @@ class _SearchPageState extends State<SearchPage> {
                 ),
                 Text(
                   noResultsMessage,
+                  style: Theme.of(context)
+                      .textTheme
+                      .labelLarge!
+                      .copyWith(color: Colors.white54),
+                )
+              ],
+            ),
+          ),
+        ),
+      );
+  Widget _buildServerError() => SafeArea(
+        child: SizedBox(
+          width: double.infinity,
+          height: screenSize.height * 0.3,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.no_sim_sharp,
+                  color: Colors.white54,
+                  size: screenSize.width * 0.2,
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                Text(
+                  serverErrorMessage,
                   style: Theme.of(context)
                       .textTheme
                       .labelLarge!
@@ -269,7 +312,7 @@ class _SearchPageState extends State<SearchPage> {
         ),
       );
 
-  Widget _buildSearchResultsBody(List<ContactModel> resultList) => SafeArea(
+  Widget _buildSearchResultsBody(ContactModel result) => SafeArea(
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(10.0),
@@ -286,66 +329,76 @@ class _SearchPageState extends State<SearchPage> {
                 const SizedBox(
                   height: 10,
                 ),
-                Column(
-                  children: resultList
-                      .map((contact) => Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 15.0),
-                            child: InkWell(
-                              onTap: () {
-                                CallerNumber.call(contact.number);
-                                setState(() {
-                                  if (!_contactsCubit.suggestions
-                                      .contains(_searchController.text)) {
-                                    _contactsCubit.suggestions
-                                        .add(_searchController.text);
-                                  }
-                                });
-                              },
-                              child: Row(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundColor: colors[_randomGenerator
-                                        .nextInt(colors.length)],
-                                    radius: screenSize.width * 0.06,
-                                    child: Text(
-                                      contact.name[0].toUpperCase(),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headline5!
-                                          .copyWith(color: Colors.white),
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    width: 15,
-                                  ),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        contact.name,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelLarge!
-                                            .copyWith(color: Colors.white),
-                                      ),
-                                      const SizedBox(
-                                        height: 5,
-                                      ),
-                                      Text(
-                                        '${contact.numberType} ${contact.number}',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelMedium!
-                                            .copyWith(color: Colors.white38),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                InkWell(
+                  onTap: () {},
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor:
+                            colors[_randomGenerator.nextInt(colors.length)],
+                        radius: screenSize.width * 0.06,
+                        child: Text(
+                          result.id.toString(),
+                          style: Theme.of(context)
+                              .textTheme
+                              .headline5!
+                              .copyWith(color: Colors.white),
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 15,
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            result.name,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium!
+                                .copyWith(color: Colors.white),
+                          ),
+                          const SizedBox(
+                            height: 5,
+                          ),
+                          Row(
+                            children: [
+                              Text(
+                                result.phone,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .caption!
+                                    .copyWith(color: Colors.white54),
                               ),
-                            ),
-                          ))
-                      .toList(),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 5.0),
+                                child: Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                result.email!,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .caption!
+                                    .copyWith(color: Colors.white54),
+                              ),
+                            ],
+                          )
+                        ],
+                      ),
+                    ],
+                  ),
                 )
               ],
             ),

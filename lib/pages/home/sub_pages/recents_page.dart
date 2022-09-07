@@ -1,5 +1,7 @@
 import 'package:contacts_app/bloc/contacts_cubit.dart';
 import 'package:contacts_app/bloc/contacts_states.dart';
+import 'package:contacts_app/data/cloud/constants.dart';
+import 'package:contacts_app/data/cloud/dio_helper.dart';
 import 'package:contacts_app/data/local/database_helper.dart';
 import 'package:contacts_app/models/call_model.dart';
 import 'package:contacts_app/models/record_model.dart';
@@ -24,6 +26,11 @@ class RecentsPage extends StatefulWidget {
 class _RecentsPageState extends State<RecentsPage> {
   late Size screenSize;
   late ContactsCubit _contactsCubit;
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -120,6 +127,7 @@ class _RecentsPageState extends State<RecentsPage> {
           highlightColor: Colors.white12,
           splashColor: Colors.transparent,
           onTap: () {
+            setState(() {});
             _callCurrentContact(call);
           },
           onLongPress: () {
@@ -224,7 +232,7 @@ class _RecentsPageState extends State<RecentsPage> {
                         onPressed: () {
                           Navigator.of(context).pushNamed(
                               AppRoutes.callerDetailsPageRoute,
-                              arguments: <dynamic>[call]);
+                              arguments: call);
                         },
                         icon: const Icon(
                           Icons.info_outline,

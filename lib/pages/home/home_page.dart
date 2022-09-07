@@ -4,7 +4,7 @@ import 'package:app_settings/app_settings.dart';
 import 'package:contacts_app/bloc/contacts_cubit.dart';
 import 'package:contacts_app/bloc/contacts_states.dart';
 import 'package:contacts_app/data/cloud/dio_helper.dart';
-import 'package:contacts_app/data/cloud/tokens.dart';
+import 'package:contacts_app/data/cloud/constants.dart';
 import 'package:contacts_app/extensions/contact_model_list_extension.dart';
 import 'package:contacts_app/extensions/string_extension.dart';
 import 'package:contacts_app/extensions/string_list_extension.dart';
@@ -90,9 +90,6 @@ class _HomePageState extends State<HomePage> {
     debugPrint('build home');
     screenSize = MediaQuery.of(context).size;
     _contactsCubit = ContactsCubit.getInstance(context);
-    DioHelper.getContacts(url: getContactsToken).then((value) {
-      _contactsCubit.contacts=value;
-    });
     return BlocConsumer<ContactsCubit, ContactsState>(
         listener: (context, state) {},
         builder: (context, state) => Scaffold(
@@ -343,6 +340,8 @@ class _HomePageState extends State<HomePage> {
                               callerName: contact?.name,
                               period: '${_randomGenerator.nextInt(10)} min');
                           await _contactsCubit.addCall(call);
+                          setState(() {
+                          });
                           CallerNumber.call(_phoneNumberController.text);
                         }
                       : null,

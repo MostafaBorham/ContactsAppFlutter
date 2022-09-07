@@ -3,6 +3,7 @@ import 'package:contacts_app/models/contact_model.dart';
 import 'package:contacts_app/models/record_model.dart';
 import 'package:contacts_app/pages/caller_details/call_record_page.dart';
 import 'package:contacts_app/pages/caller_details/caller_details_page.dart';
+import 'package:contacts_app/pages/create_contact/contact_detail_page.dart';
 import 'package:contacts_app/pages/create_contact/create_contact_page.dart';
 import 'package:contacts_app/pages/home/home_page.dart';
 import 'package:contacts_app/pages/search/search_page.dart';
@@ -39,6 +40,10 @@ Route<dynamic> onGenerate(RouteSettings settings){
     case AppRoutes.callerDetailsPageRoute:{
       final CallModel callModel=settings.arguments as CallModel;
       return CupertinoPageRoute(builder: (_)=> CallerDetailsPage(callerInfo: callModel,));
+    }
+    case AppRoutes.contactDetailPageRoute:{
+      final ContactModel contactModel=settings.arguments as ContactModel;
+      return CupertinoPageRoute(builder: (_)=> ContactDetailPage(contact: contactModel,));
     }
     default :{
       return CupertinoPageRoute(builder: (_)=>Container());

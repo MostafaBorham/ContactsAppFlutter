@@ -66,20 +66,6 @@ class _CallerDetailsPageState extends State<CallerDetailsPage> {
                 Icons.block,
                 color: Colors.white,
               )),
-          IconButton(
-              onPressed: () {
-                Navigator.pushNamed(context, AppRoutes.createContactPageRoute,arguments: <dynamic>[
-                  widget.callerInfo.callerName != null?UserTypes.OLD_USER : UserTypes.NEW_USER,
-                  widget.callerInfo.callerName != null?_contactsCubit.contacts.searchByNumber(widget.callerInfo.callNumber) :
-                  ContactModel(name: '', number: widget.callerInfo.callNumber)
-                ]);
-              },
-              icon: Icon(
-                widget.callerInfo.callerName != null
-                    ? Icons.edit_note_sharp
-                    : Icons.person_add_alt,
-                color: Colors.white,
-              )),
           PopupMenuButton<String>(
             color: Colors.grey.shade800,
             offset: Offset(screenSize.width * 0.07, 0),
@@ -118,7 +104,8 @@ class _CallerDetailsPageState extends State<CallerDetailsPage> {
                 PopupMenuItem(
                   onTap: () {
                     _contactsCubit.changeDialShowState(true);
-                    _contactsCubit.changeDialNumber(widget.callerInfo.callNumber);
+                    _contactsCubit
+                        .changeDialNumber(widget.callerInfo.callNumber);
                     Navigator.pop(context);
                   },
                   value: 'Edit number before call',

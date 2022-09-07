@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:contacts_app/bloc/contacts_cubit.dart';
+import 'package:contacts_app/data/cloud/constants.dart';
+import 'package:contacts_app/data/cloud/dio_helper.dart';
 import 'package:contacts_app/models/contact_model.dart';
+import 'package:contacts_app/route_manager/app_routes.dart';
 import 'package:contacts_app/shared/custom_toast.dart';
 import 'package:contacts_app/utilities/user_types.dart';
 import 'package:email_validator/email_validator.dart';
@@ -21,8 +23,8 @@ class CreateContactPage extends StatefulWidget {
 }
 
 class _CreateContactPageState extends State<CreateContactPage> {
-  late ContactsCubit _contactsCubit;
   File? _image;
+  bool isLoading = false;
   final _formedKey = GlobalKey<FormState>();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
@@ -30,7 +32,7 @@ class _CreateContactPageState extends State<CreateContactPage> {
   final _emailController = TextEditingController();
   final _companyController = TextEditingController();
   final _addressController = TextEditingController();
-  final _relationshipController = TextEditingController();
+  final _websiteController = TextEditingController();
   late Size _screenSize;
   bool isMore = false;
   String selectedPhoneType = '';
@@ -51,21 +53,23 @@ class _CreateContactPageState extends State<CreateContactPage> {
   @override
   void initState() {
     super.initState();
-    if(widget.contactModel!=null){
-      String name=widget.contactModel!.name;
-      String firstName=name.contains(' ')?name.substring(0,name.indexOf(' ')) : name.substring(0,name.length);
-      String lastName=name.trim().substring(firstName.length,name.trim().length);
-      _firstNameController.text=firstName;
-      _lastNameController.text=lastName;
-      _phoneController.text=widget.contactModel!.number;
-      _emailController.text=widget.contactModel!.email??'';
-      _companyController.text=widget.contactModel!.company??'';
-      _addressController.text=widget.contactModel!.address??'';
-      _relationshipController.text=widget.contactModel!.relationship??'';
-      selectedPhoneType = widget.contactModel!.numberType??phoneTypes[0];
-      selectedEmailType = widget.contactModel!.emailType??emailTypes[0];
-    }
-    else{
+    if (widget.contactModel != null) {
+      String name = widget.contactModel!.name;
+      String firstName = name.contains(' ')
+          ? name.substring(0, name.indexOf(' '))
+          : name.substring(0, name.length);
+      String lastName =
+          name.trim().substring(firstName.length, name.trim().length);
+      _firstNameController.text = firstName;
+      _lastNameController.text = lastName;
+      _phoneController.text = widget.contactModel!.phone;
+      _emailController.text = widget.contactModel!.email ?? '';
+      _companyController.text = widget.contactModel!.company ?? '';
+      _addressController.text = widget.contactModel!.address ?? '';
+      _websiteController.text = widget.contactModel!.website ?? '';
+      selectedPhoneType = widget.contactModel!.numberType ?? phoneTypes[0];
+      selectedEmailType = widget.contactModel!.emailType ?? emailTypes[0];
+    } else {
       selectedPhoneType = phoneTypes[0];
       selectedEmailType = emailTypes[0];
     }
@@ -74,7 +78,6 @@ class _CreateContactPageState extends State<CreateContactPage> {
   @override
   Widget build(BuildContext context) {
     _screenSize = MediaQuery.of(context).size;
-    _contactsCubit = ContactsCubit.getInstance(context);
     return Scaffold(
       backgroundColor: Colors.black,
       extendBodyBehindAppBar: true,
@@ -94,31 +97,27 @@ class _CreateContactPageState extends State<CreateContactPage> {
         backgroundColor: Colors.transparent,
         actions: [
           TextButton(
-            onPressed: () {
-              if (_formedKey.currentState!.validate()) {
-                final newContact = ContactModel(
-                    name:
-                        '${_firstNameController.text} ${_lastNameController.text}',
-                    number: _phoneController.text,
-                    numberType: selectedPhoneType,
-                    address: _addressController.text,
-                    company: _companyController.text,
-                    email: _emailController.text,
-                    emailType: _emailController.text.isEmpty
-                        ? null
-                        : selectedEmailType,
-                    relationship: _relationshipController.text);
-                _contactsCubit.contacts.add(newContact);
-                CustomToast.showToast(
-                    msg: 'Contact Saved',
-                    background: Colors.green,
-                    textColor: Colors.white);
-                Navigator.pop(context);
-              }
-
-            },
-            style: TextButton.styleFrom(primary: Colors.green),
-            child: Text(widget.userType!=null && widget.userType==UserTypes.OLD_USER? 'EDIT' : 'SAVE'),
+            onPressed: isLoading
+                ? null
+                : () {
+                    if (_formedKey.currentState!.validate()) {
+                      setState(() {
+                        isLoading = true;
+                      });
+                      if(widget.contactModel==null){
+                        _createContact();
+                      }
+                      else{
+                        _updateContact();
+                      }
+                    }
+                  },
+            style: TextButton.styleFrom(
+                foregroundColor: isLoading ? Colors.grey : Colors.green),
+            child: Text(
+                widget.userType != null && widget.userType == UserTypes.OLD_USER
+                    ? 'UPDATE'
+                    : 'CREATE'),
           )
         ],
       );
@@ -133,6 +132,12 @@ class _CreateContactPageState extends State<CreateContactPage> {
                 children: [
                   Column(
                     children: [
+                      if (isLoading)
+                        const LinearProgressIndicator(
+                          color: Colors.green,
+                          backgroundColor: Colors.transparent,
+                        ),
+                      SizedBox(height: 5,),
                       InkWell(
                         onTap: () async => await getImage(),
                         child: Container(
@@ -148,9 +153,9 @@ class _CreateContactPageState extends State<CreateContactPage> {
                                   _image!,
                                   fit: BoxFit.cover,
                                 )
-                              : widget.contactModel?.image != null
-                                  ? Image.memory(
-                                      base64Decode(widget.contactModel!.image!),
+                              : widget.contactModel!=null
+                                  ? Image.network(
+                                      widget.contactModel!.image!,
                                       fit: BoxFit.cover,
                                     )
                                   : Icon(
@@ -168,7 +173,7 @@ class _CreateContactPageState extends State<CreateContactPage> {
                         child: ElevatedButton(
                           onPressed: () {},
                           style: ElevatedButton.styleFrom(
-                            primary: Colors.green.withOpacity(0.15),
+                            backgroundColor: Colors.green.withOpacity(0.15),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20)),
                           ),
@@ -206,7 +211,7 @@ class _CreateContactPageState extends State<CreateContactPage> {
                                   width: 25,
                                 ),
                                 Text(
-                                  'Saving to\nmostafaborham7@gmail.com',
+                                  'Saving to\nContact Server',
                                   style: Theme.of(context)
                                       .textTheme
                                       .labelLarge!
@@ -243,9 +248,10 @@ class _CreateContactPageState extends State<CreateContactPage> {
                             child: TextFormField(
                               cursorColor: Colors.green,
                               controller: _firstNameController,
-                              style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                color: Colors.white70
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium!
+                                  .copyWith(color: Colors.white70),
                               validator: (input) {
                                 if (input!.isEmpty) {
                                   return 'please enter contact name!';
@@ -283,9 +289,10 @@ class _CreateContactPageState extends State<CreateContactPage> {
                           SizedBox(
                             width: _screenSize.width * 0.7,
                             child: TextFormField(
-                              style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                color: Colors.white70
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium!
+                                  .copyWith(color: Colors.white70),
                               cursorColor: Colors.green,
                               controller: _lastNameController,
                               decoration: InputDecoration(
@@ -322,10 +329,12 @@ class _CreateContactPageState extends State<CreateContactPage> {
                           SizedBox(
                             width: _screenSize.width * 0.7,
                             child: TextFormField(
-                              style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                color: Colors.white70
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium!
+                                  .copyWith(color: Colors.white70),
                               cursorColor: Colors.green,
+                              keyboardType: TextInputType.phone,
                               controller: _phoneController,
                               validator: (input) {
                                 if (input!.isEmpty) {
@@ -400,9 +409,10 @@ class _CreateContactPageState extends State<CreateContactPage> {
                           SizedBox(
                             width: _screenSize.width * 0.7,
                             child: TextFormField(
-                              style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                color: Colors.white70
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium!
+                                  .copyWith(color: Colors.white70),
                               cursorColor: Colors.green,
                               controller: _emailController,
                               validator: (input) {
@@ -483,9 +493,10 @@ class _CreateContactPageState extends State<CreateContactPage> {
                                     SizedBox(
                                       width: _screenSize.width * 0.7,
                                       child: TextFormField(
-                                        style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                color: Colors.white70
-                              ),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium!
+                                            .copyWith(color: Colors.white70),
                                         cursorColor: Colors.green,
                                         controller: _companyController,
                                         decoration: InputDecoration(
@@ -526,9 +537,10 @@ class _CreateContactPageState extends State<CreateContactPage> {
                                     SizedBox(
                                       width: _screenSize.width * 0.7,
                                       child: TextFormField(
-                                        style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                color: Colors.white70
-                              ),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium!
+                                            .copyWith(color: Colors.white70),
                                         cursorColor: Colors.green,
                                         controller: _addressController,
                                         decoration: InputDecoration(
@@ -560,7 +572,7 @@ class _CreateContactPageState extends State<CreateContactPage> {
                                         height: 20,
                                         width: 20,
                                         child: Icon(
-                                          Icons.family_restroom,
+                                          Icons.web_stories,
                                           color: Colors.white54,
                                         )),
                                     const SizedBox(
@@ -569,11 +581,12 @@ class _CreateContactPageState extends State<CreateContactPage> {
                                     SizedBox(
                                       width: _screenSize.width * 0.7,
                                       child: TextFormField(
-                                        style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                color: Colors.white70
-                              ),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium!
+                                            .copyWith(color: Colors.white70),
                                         cursorColor: Colors.green,
-                                        controller: _relationshipController,
+                                        controller: _websiteController,
                                         decoration: InputDecoration(
                                             enabledBorder:
                                                 const UnderlineInputBorder(
@@ -584,7 +597,7 @@ class _CreateContactPageState extends State<CreateContactPage> {
                                                     borderSide: BorderSide(
                                                         color: Colors.green,
                                                         width: 2)),
-                                            hintText: 'Relationship',
+                                            hintText: 'Website',
                                             hintStyle: Theme.of(context)
                                                 .textTheme
                                                 .titleMedium!
@@ -603,7 +616,7 @@ class _CreateContactPageState extends State<CreateContactPage> {
                                 });
                               },
                               style: TextButton.styleFrom(
-                                primary: Colors.green,
+                                foregroundColor: Colors.green,
                               ),
                               child: const Text('MORE FIELDS'),
                             )
@@ -621,6 +634,71 @@ class _CreateContactPageState extends State<CreateContactPage> {
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
     setState(() {
       _image = File(image!.path);
+    });
+  }
+
+  void _createContact(){
+    ContactModel contact = ContactModel(
+      name:
+      '${_firstNameController.text} ${_lastNameController.text}',
+      phone: _phoneController.text,
+      address: _addressController.text,
+      company: _companyController.text,
+      email: _emailController.text,
+      website: _websiteController.text,
+    );
+    DioHelper.addContact(
+        url: ApiConstants.endpoint,
+        data: contact.toJson())
+        .then((newContact) {
+      setState(() {
+        isLoading = false;
+        CustomToast.showToast(
+            msg:
+            'Contact with ID ${newContact.id} has been created.',
+            background: Colors.green,
+            textColor: Colors.white);
+        Navigator.pushReplacementNamed(context, AppRoutes.contactDetailPageRoute,arguments: newContact);
+      });
+    }).catchError((_) {
+      setState(() {
+        isLoading = false;
+        CustomToast.showToast(
+            msg: 'server error... contact not created!',
+            background: Colors.red,
+            textColor: Colors.white);
+      });
+    });
+  }
+  void _updateContact(){
+    ContactModel contact = ContactModel(
+      name:
+      '${_firstNameController.text} ${_lastNameController.text}',
+      phone: _phoneController.text,
+      address: _addressController.text,
+      company: _companyController.text,
+      email: _emailController.text,
+      website: _websiteController.text,
+    );
+
+    DioHelper.updateContacts(url: ApiConstants.endpoint, id: widget.contactModel!.id.toString(), data: contact.toJson()).then((updatedContact) {
+      setState(() {
+        isLoading = false;
+        CustomToast.showToast(
+            msg:
+            'Contact with ID ${updatedContact.id} has been updated.',
+            background: Colors.green,
+            textColor: Colors.white);
+        Navigator.pushReplacementNamed(context, AppRoutes.contactDetailPageRoute,arguments: updatedContact);
+      });
+    }).catchError((error){
+      setState(() {
+        isLoading = false;
+        CustomToast.showToast(
+            msg: 'server error... contact not updated!',
+            background: Colors.red,
+            textColor: Colors.white);
+      });
     });
   }
 }

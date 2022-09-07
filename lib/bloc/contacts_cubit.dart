@@ -143,18 +143,6 @@ class ContactsCubit extends Cubit<ContactsState> {
   ];
 
   List<ContactModel> contacts = [
-    ContactModel(
-        name: 'Mom',
-        number: '01018184261',
-        numberType: 'Home',
-        address: 'benha',
-        relationship: 'Mother'),
-    ContactModel(
-        name: 'Mostafa Borham',
-        number: '01005267056',
-        numberType: 'Mobile',
-        email: 'mostafaborham7@gmail.com',
-        company: 'ITI'),
   ];
 
   void filter(FilterTypes filterType) {
