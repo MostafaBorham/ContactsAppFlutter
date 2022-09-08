@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:contacts_app/data/cloud/constants.dart';
@@ -104,10 +103,9 @@ class _CreateContactPageState extends State<CreateContactPage> {
                       setState(() {
                         isLoading = true;
                       });
-                      if(widget.contactModel==null){
+                      if (widget.contactModel == null) {
                         _createContact();
-                      }
-                      else{
+                      } else {
                         _updateContact();
                       }
                     }
@@ -137,7 +135,9 @@ class _CreateContactPageState extends State<CreateContactPage> {
                           color: Colors.green,
                           backgroundColor: Colors.transparent,
                         ),
-                      SizedBox(height: 5,),
+                      const SizedBox(
+                        height: 5,
+                      ),
                       InkWell(
                         onTap: () async => await getImage(),
                         child: Container(
@@ -153,7 +153,7 @@ class _CreateContactPageState extends State<CreateContactPage> {
                                   _image!,
                                   fit: BoxFit.cover,
                                 )
-                              : widget.contactModel!=null
+                              : widget.contactModel != null
                                   ? Image.network(
                                       widget.contactModel!.image!,
                                       fit: BoxFit.cover,
@@ -637,28 +637,26 @@ class _CreateContactPageState extends State<CreateContactPage> {
     });
   }
 
-  void _createContact(){
+  void _createContact() {
     ContactModel contact = ContactModel(
-      name:
-      '${_firstNameController.text} ${_lastNameController.text}',
+      name: '${_firstNameController.text} ${_lastNameController.text}',
       phone: _phoneController.text,
       address: _addressController.text,
       company: _companyController.text,
       email: _emailController.text,
       website: _websiteController.text,
     );
-    DioHelper.addContact(
-        url: ApiConstants.endpoint,
-        data: contact.toJson())
+    DioHelper.addContact(url: ApiConstants.endpoint, data: contact.toJson())
         .then((newContact) {
       setState(() {
         isLoading = false;
         CustomToast.showToast(
-            msg:
-            'Contact with ID ${newContact.id} has been created.',
+            msg: 'Contact with ID ${newContact.id} has been created.',
             background: Colors.green,
             textColor: Colors.white);
-        Navigator.pushReplacementNamed(context, AppRoutes.contactDetailPageRoute,arguments: newContact);
+        Navigator.pushReplacementNamed(
+            context, AppRoutes.contactDetailPageRoute,
+            arguments: newContact);
       });
     }).catchError((_) {
       setState(() {
@@ -670,10 +668,10 @@ class _CreateContactPageState extends State<CreateContactPage> {
       });
     });
   }
-  void _updateContact(){
+
+  void _updateContact() {
     ContactModel contact = ContactModel(
-      name:
-      '${_firstNameController.text} ${_lastNameController.text}',
+      name: '${_firstNameController.text} ${_lastNameController.text}',
       phone: _phoneController.text,
       address: _addressController.text,
       company: _companyController.text,
@@ -681,17 +679,22 @@ class _CreateContactPageState extends State<CreateContactPage> {
       website: _websiteController.text,
     );
 
-    DioHelper.updateContacts(url: ApiConstants.endpoint, id: widget.contactModel!.id.toString(), data: contact.toJson()).then((updatedContact) {
+    DioHelper.updateContacts(
+            url: ApiConstants.endpoint,
+            id: widget.contactModel!.id.toString(),
+            data: contact.toJson())
+        .then((updatedContact) {
       setState(() {
         isLoading = false;
         CustomToast.showToast(
-            msg:
-            'Contact with ID ${updatedContact.id} has been updated.',
+            msg: 'Contact with ID ${updatedContact.id} has been updated.',
             background: Colors.green,
             textColor: Colors.white);
-        Navigator.pushReplacementNamed(context, AppRoutes.contactDetailPageRoute,arguments: updatedContact);
+        Navigator.pushReplacementNamed(
+            context, AppRoutes.contactDetailPageRoute,
+            arguments: updatedContact);
       });
-    }).catchError((error){
+    }).catchError((error) {
       setState(() {
         isLoading = false;
         CustomToast.showToast(

@@ -52,20 +52,18 @@ class _ContactsPageState extends State<ContactsPage> {
                   FutureBuilder<List<ContactModel>>(
                     future: DioHelper.getContacts(url: ApiConstants.endpoint),
                     builder: (_, snapshot) {
-                      if(snapshot.hasError){
+                      if (snapshot.hasError) {
                         return Expanded(
-                          child:
-                          Center(
+                          child: Center(
                               child: Text(
-                                'Server Error',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headline5!
-                                    .copyWith(color: Colors.white70),
-                              )),
+                            'Server Error',
+                            style: Theme.of(context)
+                                .textTheme
+                                .headline5!
+                                .copyWith(color: Colors.white70),
+                          )),
                         );
-                      }
-                      else if(snapshot.hasData){
+                      } else if (snapshot.hasData) {
                         return Expanded(
                           child: AlphabetScrollView(
                             list: snapshot.data!
@@ -73,16 +71,18 @@ class _ContactsPageState extends State<ContactsPage> {
                                 .toList(),
                             itemExtent: _screenSize.width * 0.25,
                             itemBuilder: (_, index, name) {
-                              ContactModel? contactModel=snapshot.data!.searchByName(name);
+                              ContactModel? contactModel =
+                                  snapshot.data!.searchByName(name);
                               return InkWell(
-                                onTap: (){
-                                  Navigator.pushNamed(context, AppRoutes.contactDetailPageRoute,arguments: contactModel);
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                      context, AppRoutes.contactDetailPageRoute,
+                                      arguments: contactModel);
                                 },
                                 child: Row(
                                   children: [
                                     CircleAvatar(
-                                      backgroundColor: colors[
-                                      _randomGenerator
+                                      backgroundColor: colors[_randomGenerator
                                           .nextInt(colors.length)],
                                       radius: _screenSize.width * 0.07,
                                       child: Text(
@@ -90,16 +90,17 @@ class _ContactsPageState extends State<ContactsPage> {
                                         style: Theme.of(context)
                                             .textTheme
                                             .headline5!
-                                            .copyWith(
-                                            color: Colors.white),
+                                            .copyWith(color: Colors.white),
                                       ),
                                     ),
                                     const SizedBox(
                                       width: 15,
                                     ),
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Text(
                                           name,
@@ -111,36 +112,52 @@ class _ContactsPageState extends State<ContactsPage> {
                                               .titleMedium!
                                               .copyWith(color: Colors.white),
                                         ),
-                                        const SizedBox(height: 5,),
+                                        const SizedBox(
+                                          height: 5,
+                                        ),
                                         Flexible(
                                           child: Row(
                                             children: [
-                                              Text(contactModel.phone,
+                                              Text(
+                                                contactModel.phone,
                                                 maxLines: 1,
                                                 softWrap: true,
                                                 overflow: TextOverflow.ellipsis,
                                                 style: Theme.of(context)
                                                     .textTheme
                                                     .caption!
-                                                    .copyWith(color: Colors.white54),),
+                                                    .copyWith(
+                                                        color: Colors.white54),
+                                              ),
                                               Padding(
-                                                padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                                                child: Container(width: 8,height: 8,
-                                                decoration: const BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  color: Colors.grey,
-                                                ),),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 5.0),
+                                                child: Container(
+                                                  width: 8,
+                                                  height: 8,
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
                                               ),
                                               SizedBox(
-                                                width : _screenSize.width*0.3,
-                                                child: Text(contactModel.email!,
+                                                width: _screenSize.width * 0.3,
+                                                child: Text(
+                                                  contactModel.email!,
                                                   maxLines: 1,
                                                   softWrap: true,
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                   style: Theme.of(context)
                                                       .textTheme
                                                       .caption!
-                                                      .copyWith(color: Colors.white54),),
+                                                      .copyWith(
+                                                          color:
+                                                              Colors.white54),
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -152,9 +169,9 @@ class _ContactsPageState extends State<ContactsPage> {
                               );
                             },
                             selectedTextStyle:
-                            const TextStyle(color: Colors.green),
+                                const TextStyle(color: Colors.green),
                             unselectedTextStyle:
-                            const TextStyle(color: Colors.grey),
+                                const TextStyle(color: Colors.grey),
                             isAlphabetsFiltered: false,
                           ),
                         );
@@ -162,8 +179,8 @@ class _ContactsPageState extends State<ContactsPage> {
                       return const Expanded(
                           child: Center(
                               child: CircularProgressIndicator(
-                                color: Colors.green,
-                              )));
+                        color: Colors.green,
+                      )));
                     },
                   ),
                 ],

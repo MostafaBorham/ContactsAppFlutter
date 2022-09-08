@@ -9,6 +9,7 @@ import 'package:contacts_app/shared/sms_sender.dart';
 import 'package:contacts_app/utilities/user_types.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:open_mail_app/open_mail_app.dart';
 
 class ContactDetailPage extends StatefulWidget {
   const ContactDetailPage({Key? key, required this.contact}) : super(key: key);
@@ -21,7 +22,7 @@ class ContactDetailPage extends StatefulWidget {
 class _ContactDetailPageState extends State<ContactDetailPage> {
   late Size screenSize;
   bool isLoading = false;
-  bool isBlocked=false;
+  bool isBlocked = false;
   @override
   Widget build(BuildContext context) {
     screenSize = MediaQuery.of(context).size;
@@ -39,12 +40,15 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
         actions: [
           IconButton(
               onPressed: () {
-                CustomAlertDialog.showAlertDialog(context, isBlocked? 'Unblock Number' : 'Block Number',
-                    'Are you sure to ${isBlocked?'unblock' : 'block'} ${widget.contact.name} ?', () {
+                CustomAlertDialog.showAlertDialog(
+                    context,
+                    isBlocked ? 'Unblock Number' : 'Block Number',
+                    'Are you sure to ${isBlocked ? 'unblock' : 'block'} ${widget.contact.name} ?',
+                    () {
                   setState(() {
-                    isBlocked=!isBlocked;
+                    isBlocked = !isBlocked;
                     CustomToast.showToast(
-                        msg: isBlocked? 'Number unblocked' : 'Number blocked',
+                        msg: isBlocked ? 'Number unblocked' : 'Number blocked',
                         background: Colors.green,
                         textColor: Colors.white);
                     Navigator.pop(context);
@@ -57,7 +61,8 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
               )),
           IconButton(
               onPressed: () {
-                Navigator.pushReplacementNamed(context, AppRoutes.createContactPageRoute,
+                Navigator.pushReplacementNamed(
+                    context, AppRoutes.createContactPageRoute,
                     arguments: <dynamic>[UserTypes.OLD_USER, widget.contact]);
               },
               icon: const Icon(
@@ -100,29 +105,38 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                 ),
                 PopupMenuItem(
                   onTap: () {
-                    Future.delayed(Duration.zero,() => CustomAlertDialog.showAlertDialog(context, 'Delete Contact',
-                        'Are you sure to delete ${widget.contact.name} ?', () {
-                      setState(() {
-                        isLoading=true;
-                      });
-                          DioHelper.deleteContact(url: ApiConstants.endpoint, id: widget.contact.id.toString()).then((value) {
-                            CustomToast.showToast(
-                                msg: value,
-                                background: Colors.green,
-                                textColor: Colors.white);
-                            Navigator.pop(context);
-                            Navigator.pop(context);
-                          }).catchError((_){
-                            setState(() {
-                              isLoading=false;
-                            });
-                            CustomToast.showToast(
-                                msg: 'Server Error ... Contact not deleted!',
-                                background: Colors.red,
-                                textColor: Colors.white);
-                            Navigator.pop(context);
-                          });
-                        }));
+                    Future.delayed(
+                        Duration.zero,
+                        () => CustomAlertDialog.showAlertDialog(
+                                context,
+                                'Delete Contact',
+                                'Are you sure to delete ${widget.contact.name} ?',
+                                () {
+                              setState(() {
+                                isLoading = true;
+                              });
+                              DioHelper.deleteContact(
+                                      url: ApiConstants.endpoint,
+                                      id: widget.contact.id.toString())
+                                  .then((value) {
+                                CustomToast.showToast(
+                                    msg: value,
+                                    background: Colors.green,
+                                    textColor: Colors.white);
+                                Navigator.pop(context);
+                                Navigator.pop(context);
+                              }).catchError((_) {
+                                setState(() {
+                                  isLoading = false;
+                                });
+                                CustomToast.showToast(
+                                    msg:
+                                        'Server Error ... Contact not deleted!',
+                                    background: Colors.red,
+                                    textColor: Colors.white);
+                                Navigator.pop(context);
+                              });
+                            }));
                   },
                   value: 'Delete contact',
                   padding: const EdgeInsets.only(right: 30, left: 10),
@@ -138,176 +152,260 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
         ],
       );
 
-  Widget _buildBody() => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15.0),
-          child: Stack(
-            children: [
-              SizedBox(
-                  height: screenSize.height * 0.5,
-                  child: Image.asset(
-                    isBlocked? 'assets/images/block_circle_background.png' :'assets/images/caller_background.png',
-                    fit: BoxFit.cover,
-                  )),
-              Padding(
-                padding:  EdgeInsets.symmetric(vertical: screenSize.height*0.1),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.contact.name,
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineMedium!
-                          .copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                              fontSize: screenSize.width * 0.11),
-                    ),
-                    Column(
-                      children: [
-                        InkWell(
-                          onTap: () =>
-                              _callCurrentContact(widget.contact.phone),
-                          child: Row(
-                            children: [
-                              Icon(Icons.phone_android,color: Colors.white60,),
-                              SizedBox(width: 10,),
-                              Text(
-                                widget.contact.phone,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge!
-                                    .copyWith(color: Colors.white70),
-                              ),
-                              Spacer(),
-                              Row(
-                                children: [
-                                  IconButton(
-                                      onPressed: () =>
-                                          _callCurrentContact(
-                                              widget.contact.phone),
-                                      icon: const Icon(
-                                        Icons.call,
-                                        color: Colors.white70,
-                                      )),
-                                  IconButton(
-                                      onPressed: () {
-                                        SmsSender.sendMessage(
-                                            number: widget.contact.phone,
-                                            msg:
-                                                'Hello ${widget.contact.name}');
-                                      },
-                                      icon: const Icon(
-                                        Icons.sms,
-                                        color: Colors.white70,
-                                      )),
-                                ],
-                              )
-                            ],
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () {
-                          },
-                          child: Row(
-                            mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween,
-                            children: [
-                              Icon(Icons.web_stories,color: Colors.white60,),
-                              SizedBox(width: 10,),
-                              Text(
-                                widget.contact.website!,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge!
-                                    .copyWith(color: Colors.white70),
-                              ),
-                              SizedBox(width: 5,),
-                              Spacer(),
-                              TextButton.icon(onPressed:(){},style: TextButton.styleFrom(
-                                primary: Colors.white60
-                              ), icon: Text('Browse'), label: Icon(Icons.keyboard_arrow_right_sharp))
-                            ],
-                          ),
-                        ),
-                        InkWell(
-                          onTap: (){},
-                          child: Row(
-                            mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween,
-                            children: [
-                              Icon(Icons.location_on_outlined,color: Colors.white60,),
-                              SizedBox(width: 10,),
-                              Text(
-                                widget.contact.address!,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge!
-                                    .copyWith(color: Colors.white70),
-                              ),
-                              SizedBox(width: 5,),
-                              Spacer(),
-                              TextButton.icon(onPressed:(){},style: TextButton.styleFrom(
-                                  primary: Colors.white60
-                              ), icon: Text('Search'), label: Icon(Icons.keyboard_arrow_right_sharp))
-                            ],
-                          ),
-                        ),
-                        InkWell(
-                          onTap: (){},
-                          child: Row(
-                            mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween,
-                            children: [
-                              Icon(Icons.email_outlined,color: Colors.white60,),
-                              SizedBox(width: 10,),
-                              Text(
-                                widget.contact.email!,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge!
-                                    .copyWith(color: Colors.white70),
-                              ),
-                              SizedBox(width: 5,),
-                              Spacer(),
-                              TextButton.icon(onPressed:(){},style: TextButton.styleFrom(
-                                  primary: Colors.white60
-                              ), icon: Text('Send'), label: Icon(Icons.keyboard_arrow_right_sharp))
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 8,),
-                        Row(
+  Widget _buildBody() {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15.0),
+        child: Stack(
+          children: [
+            SizedBox(
+                height: screenSize.height * 0.5,
+                child: Image.asset(
+                  isBlocked
+                      ? 'assets/images/block_circle_background.png'
+                      : 'assets/images/caller_background.png',
+                  fit: BoxFit.cover,
+                )),
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: screenSize.height * 0.1),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.contact.name,
+                    style: Theme.of(context).textTheme.headlineMedium!.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        fontSize: screenSize.width * 0.11),
+                  ),
+                  Column(
+                    children: [
+                      InkWell(
+                        onTap: () => _callCurrentContact(widget.contact.phone),
+                        child: Row(
                           children: [
-                            Icon(Icons.business_sharp,color: Colors.white60,),
-                            SizedBox(width: 10,),
+                            const Icon(
+                              Icons.phone_android,
+                              color: Colors.white60,
+                            ),
+                            const SizedBox(
+                              width: 10,
+                            ),
                             Text(
-                              widget.contact.company!,
+                              widget.contact.phone,
                               style: Theme.of(context)
                                   .textTheme
                                   .labelLarge!
                                   .copyWith(color: Colors.white70),
                             ),
+                            const Spacer(),
+                            Row(
+                              children: [
+                                IconButton(
+                                    onPressed: () => _callCurrentContact(
+                                        widget.contact.phone),
+                                    icon: const Icon(
+                                      Icons.call,
+                                      color: Colors.white70,
+                                    )),
+                                IconButton(
+                                    onPressed: () {
+                                      SmsSender.sendMessage(
+                                          number: widget.contact.phone,
+                                          msg: 'Hello ${widget.contact.name}');
+                                    },
+                                    icon: const Icon(
+                                      Icons.sms,
+                                      color: Colors.white70,
+                                    )),
+                              ],
+                            )
                           ],
                         ),
-                      ],
-                    )
-                  ],
-                ),
+                      ),
+                      InkWell(
+                        onTap: () => setState(() {}),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Icon(
+                              Icons.web_stories,
+                              color: Colors.white60,
+                            ),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            Text(
+                              widget.contact.website!,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelLarge!
+                                  .copyWith(color: Colors.white70),
+                            ),
+                            const SizedBox(
+                              width: 5,
+                            ),
+                            const Spacer(),
+                            TextButton.icon(
+                                onPressed: () {},
+                                style: TextButton.styleFrom(
+                                    foregroundColor: Colors.white60),
+                                icon: const Text('Browse'),
+                                label: const Icon(
+                                    Icons.keyboard_arrow_right_sharp))
+                          ],
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () {},
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Icon(
+                              Icons.location_on_outlined,
+                              color: Colors.white60,
+                            ),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            Text(
+                              widget.contact.address!,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelLarge!
+                                  .copyWith(color: Colors.white70),
+                            ),
+                            const SizedBox(
+                              width: 5,
+                            ),
+                            const Spacer(),
+                            TextButton.icon(
+                                onPressed: () {},
+                                style: TextButton.styleFrom(
+                                    foregroundColor: Colors.white60),
+                                icon: const Text('Search'),
+                                label: const Icon(
+                                    Icons.keyboard_arrow_right_sharp))
+                          ],
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () async {
+                          EmailContent email = EmailContent(
+                            to: [
+                              widget.contact.email!,
+                            ],
+                            subject: 'Hello!',
+                            body: 'Hello ${widget.contact.name}?',
+                          );
+
+                          OpenMailAppResult result =
+                              await OpenMailApp.composeNewEmailInMailApp(
+                                  nativePickerTitle:
+                                      'Select email app to compose',
+                                  emailContent: email);
+                          if (!result.didOpen && !result.canOpen) {
+                            showNoMailAppsDialog();
+                          } else if (!result.didOpen && result.canOpen) {
+                            showDialog(
+                              context: context,
+                              builder: (_) => MailAppPickerDialog(
+                                mailApps: result.options,
+                                emailContent: email,
+                              ),
+                            );
+                          }
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Icon(
+                              Icons.email_outlined,
+                              color: Colors.white60,
+                            ),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            Text(
+                              widget.contact.email!,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelLarge!
+                                  .copyWith(color: Colors.white70),
+                            ),
+                            const SizedBox(
+                              width: 5,
+                            ),
+                            const Spacer(),
+                            TextButton.icon(
+                                onPressed: () {},
+                                style: TextButton.styleFrom(
+                                    foregroundColor: Colors.white60),
+                                icon: const Text('Send'),
+                                label: const Icon(
+                                    Icons.keyboard_arrow_right_sharp))
+                          ],
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 8,
+                      ),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.business_sharp,
+                            color: Colors.white60,
+                          ),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          Text(
+                            widget.contact.company!,
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelLarge!
+                                .copyWith(color: Colors.white70),
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
+                ],
               ),
-              if (isLoading)
-                const LinearProgressIndicator(
-                  color: Colors.green,
-                  backgroundColor: Colors.transparent,
-                ),
-            ],
-          ),
+            ),
+            if (isLoading)
+              const LinearProgressIndicator(
+                color: Colors.green,
+                backgroundColor: Colors.transparent,
+              ),
+          ],
         ),
-      );
+      ),
+    );
+  }
 
   _callCurrentContact(String phone) {
     CallerNumber.call(phone);
+  }
+
+  void showNoMailAppsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Open Mail App"),
+          content: const Text("No mail apps installed"),
+          actions: <Widget>[
+            TextButton(
+              child: const Text("OK"),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            )
+          ],
+        );
+      },
+    );
   }
 }

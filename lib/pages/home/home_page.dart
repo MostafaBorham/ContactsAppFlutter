@@ -3,8 +3,6 @@ import 'dart:math';
 import 'package:app_settings/app_settings.dart';
 import 'package:contacts_app/bloc/contacts_cubit.dart';
 import 'package:contacts_app/bloc/contacts_states.dart';
-import 'package:contacts_app/data/cloud/dio_helper.dart';
-import 'package:contacts_app/data/cloud/constants.dart';
 import 'package:contacts_app/extensions/contact_model_list_extension.dart';
 import 'package:contacts_app/extensions/string_extension.dart';
 import 'package:contacts_app/extensions/string_list_extension.dart';
@@ -332,16 +330,17 @@ class _HomePageState extends State<HomePage> {
                           ContactModel? contact = _contactsCubit.contacts
                               .searchByNumber(_phoneNumberController.text);
                           CallModel call = CallModel(
-                              callType: CallTypes.values[_randomGenerator.nextInt(CallTypes.values.length)],
+                              callType: CallTypes.values[_randomGenerator
+                                  .nextInt(CallTypes.values.length)],
                               callNumber: _phoneNumberController.text,
                               time: '${_randomGenerator.nextInt(50)} min ago',
                               isHD: true,
-                              simNumber: SimNumber.values[_randomGenerator.nextInt(SimNumber.values.length)],
+                              simNumber: SimNumber.values[_randomGenerator
+                                  .nextInt(SimNumber.values.length)],
                               callerName: contact?.name,
                               period: '${_randomGenerator.nextInt(10)} min');
                           await _contactsCubit.addCall(call);
-                          setState(() {
-                          });
+                          setState(() {});
                           CallerNumber.call(_phoneNumberController.text);
                         }
                       : null,

@@ -1,9 +1,7 @@
 import 'package:contacts_app/bloc/contacts_cubit.dart';
 import 'package:contacts_app/bloc/contacts_states.dart';
 import 'package:contacts_app/extensions/call_model_list_extension.dart';
-import 'package:contacts_app/extensions/contact_model_list_extension.dart';
 import 'package:contacts_app/models/call_model.dart';
-import 'package:contacts_app/models/contact_model.dart';
 import 'package:contacts_app/models/record_model.dart';
 import 'package:contacts_app/route_manager/app_routes.dart';
 import 'package:contacts_app/shared/caller_number.dart';
@@ -12,7 +10,6 @@ import 'package:contacts_app/shared/custom_toast.dart';
 import 'package:contacts_app/shared/sms_sender.dart';
 import 'package:contacts_app/utilities/call_types.dart';
 import 'package:contacts_app/utilities/sim_number.dart';
-import 'package:contacts_app/utilities/user_types.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

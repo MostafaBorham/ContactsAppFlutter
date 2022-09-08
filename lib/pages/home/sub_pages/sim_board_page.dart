@@ -29,7 +29,7 @@ class _SimBoardPageState extends State<SimBoardPage> {
                     fontWeight: FontWeight.w500
                 ),
               ),
-              SizedBox(height: 20,),
+              const SizedBox(height: 20,),
               Expanded(
                 child: Center(
                   child: Column(
@@ -57,7 +57,7 @@ class _SimBoardPageState extends State<SimBoardPage> {
                         onPressed: () {
                           AppSettings.openDeviceSettings();
                         },
-                        style: TextButton.styleFrom(primary: Colors.green),
+                        style: TextButton.styleFrom(foregroundColor: Colors.green),
                         child: const Text('TURN ON'),
                       )
                     ],

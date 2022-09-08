@@ -1,7 +1,5 @@
 import 'package:contacts_app/bloc/contacts_cubit.dart';
 import 'package:contacts_app/bloc/contacts_states.dart';
-import 'package:contacts_app/data/cloud/constants.dart';
-import 'package:contacts_app/data/cloud/dio_helper.dart';
 import 'package:contacts_app/data/local/database_helper.dart';
 import 'package:contacts_app/models/call_model.dart';
 import 'package:contacts_app/models/record_model.dart';
@@ -61,30 +59,37 @@ class _RecentsPageState extends State<RecentsPage> {
                   height: 20,
                 ),
                 FutureBuilder<List<CallModel>>(
-                  future: DatabaseHelper.instance.getCalls() ,
-                  builder: (_,snapshot){
+                  future: DatabaseHelper.instance.getCalls(),
+                  builder: (_, snapshot) {
                     if (!snapshot.hasData) {
-                      return const Expanded(child: Center(child: CircularProgressIndicator(color: Colors.green,)));
-                    }
-                    else{
-                      List<CallModel> tmp=snapshot.data!;
-                      if(state is FilterContactsState){
-                        tmp=state.calls;
-                      }
-                      else{
-                        _contactsCubit.calls=snapshot.data!;
+                      return const Expanded(
+                          child: Center(
+                              child: CircularProgressIndicator(
+                        color: Colors.green,
+                      )));
+                    } else {
+                      List<CallModel> tmp = snapshot.data!;
+                      if (state is FilterContactsState) {
+                        tmp = state.calls;
+                      } else {
+                        _contactsCubit.calls = snapshot.data!;
                         _contactsCubit.filter(ContactsCubit.currentFilter);
                       }
                       return Expanded(
-                          child: snapshot.data!.isEmpty? Center(child: Text('No Recents Calls',style: Theme.of(context).textTheme.headline5!.copyWith(
-                              color: Colors.white70
-                          ),)) : ListView.builder(
-                              physics: const BouncingScrollPhysics(),
-                              itemBuilder: (context, index) => _buildCallItem(
-                                  tmp[index]
-                              ),
-                              itemCount: tmp.length)
-                      );
+                          child: snapshot.data!.isEmpty
+                              ? Center(
+                                  child: Text(
+                                  'No Recents Calls',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headline5!
+                                      .copyWith(color: Colors.white70),
+                                ))
+                              : ListView.builder(
+                                  physics: const BouncingScrollPhysics(),
+                                  itemBuilder: (context, index) =>
+                                      _buildCallItem(tmp[index]),
+                                  itemCount: tmp.length));
                     }
                   },
                 )

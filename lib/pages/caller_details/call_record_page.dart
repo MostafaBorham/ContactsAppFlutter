@@ -30,7 +30,7 @@ class _CallRecordPageState extends State<CallRecordPage> {
     _audioPlayer.onPlayerStateChanged.listen((state) {
       setState(() {
         isPlaying = state == PlayerState.playing;
-        isStarted=true;
+        isStarted = true;
       });
     });
     ///////////////////////
@@ -49,8 +49,8 @@ class _CallRecordPageState extends State<CallRecordPage> {
     _audioPlayer.onPlayerComplete.listen((event) {
       setState(() {
         isPlaying = false;
-        isStarted=false;
-        position=Duration.zero;
+        isStarted = false;
+        position = Duration.zero;
       });
     });
   }
@@ -78,8 +78,9 @@ class _CallRecordPageState extends State<CallRecordPage> {
                   child: Column(
                     children: widget.records
                         .map((record) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 15.0),
-                          child: Column(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 15.0),
+                              child: Column(
                                 children: [
                                   Row(
                                     mainAxisAlignment:
@@ -96,7 +97,8 @@ class _CallRecordPageState extends State<CallRecordPage> {
                                                 .labelLarge!
                                                 .copyWith(
                                                     color: Colors.white,
-                                                    fontWeight: FontWeight.w500),
+                                                    fontWeight:
+                                                        FontWeight.w500),
                                           ),
                                           const SizedBox(
                                             height: 5,
@@ -117,45 +119,62 @@ class _CallRecordPageState extends State<CallRecordPage> {
                                             if (isPlaying) {
                                               await _audioPlayer.pause();
                                             } else {
-                                              await _audioPlayer.play(UrlSource(record.url));
+                                              await _audioPlayer
+                                                  .play(UrlSource(record.url));
                                             }
                                           },
                                           padding: EdgeInsets.zero,
                                           constraints: const BoxConstraints(),
-                                          icon: Icon(isPlaying? Icons.pause_circle : Icons.play_circle),
+                                          icon: Icon(isPlaying
+                                              ? Icons.pause_circle
+                                              : Icons.play_circle),
                                           color: Colors.white60)
                                     ],
                                   ),
                                   if (isStarted)
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
                                       children: [
                                         Expanded(
                                           flex: 1,
-                                          child: Text(position.toString(),style: Theme.of(context).textTheme.caption!.copyWith(
-                                            color: Colors.white60
-                                          ),),
+                                          child: Text(
+                                            position.toString(),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .caption!
+                                                .copyWith(
+                                                    color: Colors.white60),
+                                          ),
                                         ),
                                         Expanded(
                                           flex: 3,
                                           child: Slider(
                                               min: 0,
-                                              max: duration.inSeconds.toDouble(),
-                                              value: position.inSeconds.toDouble(),
+                                              max:
+                                                  duration.inSeconds.toDouble(),
+                                              value:
+                                                  position.inSeconds.toDouble(),
                                               onChanged: (value) async {}),
                                         ),
                                         Expanded(
                                           flex: 1,
-                                          child: Text((duration - position).toString(),style: Theme.of(context).textTheme.caption!.copyWith(
-                                              color: Colors.white60
-                                          ),),
+                                          child: Text(
+                                            (duration - position).toString(),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .caption!
+                                                .copyWith(
+                                                    color: Colors.white60),
+                                          ),
                                         ),
                                       ],
                                     ),
                                 ],
                               ),
-                        ))
+                            ))
                         .toList(),
                   ),
                 ),
