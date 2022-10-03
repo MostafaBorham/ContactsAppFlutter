@@ -100,10 +100,7 @@ class _CallerDetailsPageState extends State<CallerDetailsPage> {
                 ),
                 PopupMenuItem(
                   onTap: () {
-                    _contactsCubit.changeDialShowState(true);
-                    _contactsCubit
-                        .changeDialNumber(widget.callerInfo.callNumber);
-                    Navigator.pop(context);
+                    Navigator.of(context).pop(widget.callerInfo.callNumber);
                   },
                   value: 'Edit number before call',
                   padding: const EdgeInsets.only(right: 30, left: 10),

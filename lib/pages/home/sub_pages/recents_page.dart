@@ -234,10 +234,15 @@ class _RecentsPageState extends State<RecentsPage> {
                           .copyWith(color: Colors.white54),
                     ),
                     IconButton(
-                        onPressed: () {
-                          Navigator.of(context).pushNamed(
+                        onPressed: () async {
+                          var number= await Navigator.of(context).pushNamed(
                               AppRoutes.callerDetailsPageRoute,
                               arguments: call);
+                          if(number!=null){
+                            _contactsCubit.changeDialShowState(true);
+                             _contactsCubit
+                                 .changeDialNumber(number.toString());
+                          }
                         },
                         icon: const Icon(
                           Icons.info_outline,
